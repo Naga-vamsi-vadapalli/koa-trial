@@ -13,7 +13,6 @@ mongoose
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.error("MongoDB connection error:", err));
 
-// Task Schema and Model
 const taskSchema = new mongoose.Schema({
   name: { type: String, required: true },
   description: { type: String, required: true },
@@ -28,15 +27,12 @@ const taskSchema = new mongoose.Schema({
 
 const Task = mongoose.model("Task", taskSchema);
 
-// Koa App and Router
 const app = new Koa();
 const router = new Router();
 
-// Middleware
 app.use(cors());
 app.use(bodyParser());
 
-// Routes
 router.get("/api/tasks", async (ctx) => {
   try {
     const tasks = await Task.find();
@@ -86,9 +82,7 @@ router.delete("/api/tasks/:id", async (ctx) => {
   }
 });
 
-// Register Routes
 app.use(router.routes()).use(router.allowedMethods());
 
-// Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
