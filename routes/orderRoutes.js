@@ -1,9 +1,12 @@
-const router = require("koa-router")();
-const { Order, Product } = require("./models/order");
+const Router = require("koa-router"); // Import Koa Router
+const { Order, Product } = require("../models/Orders"); // Adjust the path if needed
+
+const router = new Router(); // Create a new Router instance
 
 router.post("/orders", async (ctx) => {
   const { customerId, orderId, orderLine } = ctx.request.body;
 
+  // Calculate subtotal for each order line
   const updatedOrderLine = await Promise.all(
     orderLine.map(async (line) => {
       const product = await Product.findById(line.productId);
@@ -17,6 +20,7 @@ router.post("/orders", async (ctx) => {
     })
   );
 
+  // Create and save the order
   const newOrder = new Order({
     customerId,
     orderId,
@@ -26,3 +30,6 @@ router.post("/orders", async (ctx) => {
 
   ctx.body = { message: "Order created successfully", order: newOrder };
 });
+
+// Export the router instance
+module.exports = router;

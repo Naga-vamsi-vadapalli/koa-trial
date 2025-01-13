@@ -2,7 +2,7 @@ const Koa = require("koa");
 const bodyParser = require("koa-bodyparser");
 const mongoose = require("mongoose");
 const orderRoutes = require("./routes/orderRoutes");
-const { Product } = require("./models/order");
+const { Product } = require("./models/Orders");
 require("dotenv").config();
 
 const app = new Koa();
