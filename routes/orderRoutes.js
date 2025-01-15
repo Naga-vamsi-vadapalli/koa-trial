@@ -8,38 +8,44 @@ const router = new Router();
  * Create a new order
  */
 router.post("/orders", async (ctx) => {
-  const { customerId, orderId, orderLine } = ctx.request.body;
+  try {
+    const { customerId, orderId, orderLine } = ctx.request.body;
 
-  if (!customerId || !orderId || !orderLine || !Array.isArray(orderLine)) {
-    ctx.throw(400, "Invalid request body");
+    console.log("Received payload:", ctx.request.body);
+
+    if (!customerId || !orderId || !orderLine || !Array.isArray(orderLine)) {
+      ctx.throw(400, "Invalid request payload");
+    }
+
+    const updatedOrderLine = await Promise.all(
+      orderLine.map(async (line) => {
+        console.log("Processing productId:", line.productId);
+        const product = await Product.findById(line.productId);
+        if (!product) {
+          ctx.throw(400, `Product with ID ${line.productId} not found`);
+        }
+        console.log("Found product:", product);
+        return {
+          ...line,
+          subtotal: product.price * line.quantity,
+        };
+      })
+    );
+
+    const newOrder = new Order({
+      customerId,
+      orderId,
+      orderLine: updatedOrderLine,
+    });
+    await newOrder.save();
+
+    console.log("Order created successfully:", newOrder);
+    ctx.body = { message: "Order created successfully", order: newOrder };
+  } catch (error) {
+    console.error("Error creating order:", error);
+    ctx.status = error.status || 500;
+    ctx.body = { error: error.message || "Internal Server Error" };
   }
-
-  const updatedOrderLine = await Promise.all(
-    orderLine.map(async (line) => {
-      const product = await Product.findOne({ productId: line.productId });
-      if (!product) {
-        ctx.throw(404, `Product with ID ${line.productId} not found`);
-      }
-      if (line.quantity <= 0) {
-        ctx.throw(400, "Quantity must be greater than 0");
-      }
-      return {
-        ...line,
-        subtotal: product.price * line.quantity,
-      };
-    })
-  );
-
-  const newOrder = new Order({
-    customerId,
-    orderId,
-    orderLine: updatedOrderLine,
-  });
-
-  await newOrder.save();
-
-  ctx.status = 201;
-  ctx.body = { message: "Order created successfully", order: newOrder };
 });
 
 /**
