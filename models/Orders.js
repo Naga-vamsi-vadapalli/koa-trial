@@ -1,11 +1,11 @@
 const mongoose = require("mongoose");
 
 const productSchema = new mongoose.Schema({
-  productId: { type: String, required: true },
+  productId: { type: String, required: true, unique: true },
   name: { type: String, required: true },
   description: { type: String },
   price: { type: Number, required: true },
-  stock: { type: Number, required: true },
+  stock: { type: Number, required: true, min: 0 },
 });
 
 const orderLineSchema = new mongoose.Schema({
@@ -14,7 +14,7 @@ const orderLineSchema = new mongoose.Schema({
     ref: "Product",
     required: true,
   },
-  quantity: { type: Number, required: true },
+  quantity: { type: Number, required: true, min: 1 },
   subtotal: { type: Number, required: true },
 });
 

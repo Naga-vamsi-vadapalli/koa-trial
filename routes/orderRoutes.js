@@ -1,17 +1,24 @@
-const Router = require("koa-router"); // Import Koa Router
-const { Order, Product } = require("../models/Orders"); // Adjust the path if needed
+const Router = require("koa-router");
+const { Order, Product } = require("../models/Orders");
 
-const router = new Router(); // Create a new Router instance
+const router = new Router();
 
 router.post("/orders", async (ctx) => {
   const { customerId, orderId, orderLine } = ctx.request.body;
 
-  // Calculate subtotal for each order line
+  // Validate request body
+  if (!customerId || !orderId || !orderLine || !Array.isArray(orderLine)) {
+    ctx.throw(400, "Invalid request body");
+  }
+
   const updatedOrderLine = await Promise.all(
     orderLine.map(async (line) => {
-      const product = await Product.findById(line.productId);
+      const product = await Product.findOne({ productId: line.productId });
       if (!product) {
-        ctx.throw(400, `Product with ID ${line.productId} not found`);
+        ctx.throw(404, `Product with ID ${line.productId} not found`);
+      }
+      if (line.quantity <= 0) {
+        ctx.throw(400, "Quantity must be greater than 0");
       }
       return {
         ...line,
@@ -26,10 +33,11 @@ router.post("/orders", async (ctx) => {
     orderId,
     orderLine: updatedOrderLine,
   });
+
   await newOrder.save();
 
+  ctx.status = 201;
   ctx.body = { message: "Order created successfully", order: newOrder };
 });
 
-// Export the router instance
 module.exports = router;
