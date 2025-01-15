@@ -11,20 +11,16 @@ router.post("/orders", async (ctx) => {
   try {
     const { customerId, orderId, orderLine } = ctx.request.body;
 
-    console.log("Received payload:", ctx.request.body);
-
     if (!customerId || !orderId || !orderLine || !Array.isArray(orderLine)) {
       ctx.throw(400, "Invalid request payload");
     }
 
     const updatedOrderLine = await Promise.all(
       orderLine.map(async (line) => {
-        console.log("Processing productId:", line.productId);
-        const product = await Product.findById(line.productId);
+        const product = await Product.findOne({ productId: line.productId });
         if (!product) {
           ctx.throw(400, `Product with ID ${line.productId} not found`);
         }
-        console.log("Found product:", product);
         return {
           ...line,
           subtotal: product.price * line.quantity,
@@ -39,7 +35,6 @@ router.post("/orders", async (ctx) => {
     });
     await newOrder.save();
 
-    console.log("Order created successfully:", newOrder);
     ctx.body = { message: "Order created successfully", order: newOrder };
   } catch (error) {
     console.error("Error creating order:", error);
