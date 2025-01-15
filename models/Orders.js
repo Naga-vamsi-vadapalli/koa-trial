@@ -10,8 +10,7 @@ const productSchema = new mongoose.Schema({
 
 const orderLineSchema = new mongoose.Schema({
   productId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Product",
+    type: String, // Use String instead of ObjectId
     required: true,
   },
   quantity: { type: Number, required: true, min: 1 },
